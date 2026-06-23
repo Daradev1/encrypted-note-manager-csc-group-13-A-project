@@ -1,0 +1,19 @@
+'use client'
+
+import { useState } from 'react'
+import { SimpleAuth } from '@/components/auth/SimpleAuth'
+import NotesPage from './notes/page'
+
+export default function Home() {
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Add console log to debug
+  console.log('Current userId in root:', userId)
+
+  if (!userId) {
+    return <SimpleAuth onLogin={setUserId} />
+  }
+
+  // Make sure userId is being passed as a prop
+  return <NotesPage userId={userId} />
+}

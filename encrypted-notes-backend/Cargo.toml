@@ -1,0 +1,32 @@
+[package]
+name = "encrypted-notes-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Web framework
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# MongoDB
+mongodb = "2.8"
+bson = "2.8"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Dates
+chrono = "0.4"
+
+# Environment variables
+dotenvy = "0.15"
+
+# For streams
+futures = "0.3"
+
+# Encryption
+aes-gcm = "0.10"
+rand = "0.8"
+base64 = "0.21"

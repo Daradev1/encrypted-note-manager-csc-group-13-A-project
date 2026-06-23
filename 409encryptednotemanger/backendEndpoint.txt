@@ -1,0 +1,46 @@
+// GET /api/notes
+Response: [
+  {
+    id: String,
+    encrypted_title: String,  // Base64 encoded
+    encrypted_content: String, // Base64 encoded
+    iv: String,                // Initialization vector
+    auth_tag: String,          // For AES-GCM
+    created_at: DateTime,
+    updated_at: DateTime,
+    pinned: bool,
+    starred: bool
+  }
+]
+
+// POST /api/notes
+Request: {
+  title: String,    // Plain text to encrypt
+  content: String,  // Plain text to encrypt
+  client_id: String // For idempotency
+}
+
+Response: {
+  id: String,
+  encrypted_title: String,
+  encrypted_content: String,
+  iv: String,
+  auth_tag: String,
+  created_at: DateTime,
+  updated_at: DateTime,
+  pinned: bool,
+  starred: bool
+}
+
+// PUT /api/notes/:id
+Request: {
+  title?: String,
+  content?: String,
+  pinned?: bool,
+  starred?: bool
+}
+
+Response: Same as POST
+
+// DELETE /api/notes/:id
+Response: 200 OK
