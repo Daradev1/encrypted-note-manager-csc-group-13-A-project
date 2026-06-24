@@ -326,55 +326,65 @@ async fn delete_note(
 #[tokio::main]
 async fn main() {
     println!("🚀 Starting encrypted notes backend...");
-    
-    // Load .env file
-    dotenvy::dotenv().ok();
-    
+
+    // Load .env locally (ignored on Render if no .env exists)
+    let _ = dotenvy::dotenv();
+
+    // MongoDB connection string
     let mongodb_uri = env::var("MONGODB_URI")
-        .expect("❌  must be set in .env file");
-    
+        .expect("❌ MONGODB_URI environment variable is missing");
+
+    // Database name (optional, defaults to notes-app)
+    let database_name =
+        env::var("DATABASE_NAME").unwrap_or_else(|_| "notes-app".to_string());
+
+    // Render provides PORT automatically
     let port = env::var("PORT")
         .unwrap_or_else(|_| "8080".to_string());
-    
+
     println!("📦 Connecting to MongoDB...");
-    
+    println!("📂 Database: {}", database_name);
+
     // Connect to MongoDB
-    let client_options = ClientOptions::parse(&mongodb_uri).await.unwrap();
-    let client = Client::with_options(client_options).unwrap();
-    let db = client.database("notes-app");
+    let client_options = ClientOptions::parse(&mongodb_uri)
+        .await
+        .expect("❌ Failed to parse MongoDB URI");
+
+    let client = Client::with_options(client_options)
+        .expect("❌ Failed to create MongoDB client");
+
+    let db = client.database(&database_name);
     let collection: Collection<Note> = db.collection("notes");
-    
+
     println!("✅ Connected to MongoDB successfully!");
-    
+
     let state = AppState { db: collection };
-    
-    // Setup CORS
+
+    // CORS
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods(Any)
         .allow_headers(Any);
-    
-    // Build router - IMPORTANT: Order matters!
+
     let app = Router::new()
-        .route("/api/notes/:user_id", get(get_notes))  // GET notes for user
-        .route("/api/notes", post(create_note))        // POST new note
-        .route("/api/notes/id/:id", get(get_note))     // GET single note by ID
-        .route("/api/notes/id/:id", put(update_note))  // PUT update note
-        .route("/api/notes/id/:id", delete(delete_note)) // DELETE note
+        .route("/api/notes/:user_id", get(get_notes))
+        .route("/api/notes", post(create_note))
+        .route("/api/notes/id/:id", get(get_note))
+        .route("/api/notes/id/:id", put(update_note))
+        .route("/api/notes/id/:id", delete(delete_note))
         .layer(cors)
         .with_state(state);
-    
-    // Start server
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await.unwrap();
-    
-    println!("🌟 Server running on http://0.0.0.0:{}", port);
-    println!("📝 API endpoints:");
-    println!("   GET    /api/notes/:user_id  - Get all notes for a user");
-    println!("   POST   /api/notes           - Create new note");
-    println!("   GET    /api/notes/id/:id    - Get single note");
-    println!("   PUT    /api/notes/id/:id    - Update note");
-    println!("   DELETE /api/notes/id/:id    - Delete note");
+
+    let address = format!("0.0.0.0:{}", port);
+
+    println!("🌟 Server running on {}", address);
     println!("🔐 Encryption: AES-256-GCM enabled");
-    
-    axum::serve(listener, app).await.unwrap();
+
+    let listener = tokio::net::TcpListener::bind(&address)
+        .await
+        .expect("❌ Failed to bind server port");
+
+    axum::serve(listener, app)
+        .await
+        .expect("❌ Server crashed");
 }
