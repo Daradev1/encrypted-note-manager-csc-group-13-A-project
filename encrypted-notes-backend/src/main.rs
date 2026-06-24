@@ -322,6 +322,11 @@ async fn delete_note(
     }
 }
 
+// Add this new handler after your other handlers
+async fn root_handler() -> &'static str {
+    "🚀 Encrypted Notes API is running! Visit /api/notes/:user_id to get notes"
+}
+
 // === MAIN FUNCTION ===
 #[tokio::main]
 async fn main() {
@@ -366,14 +371,15 @@ async fn main() {
         .allow_methods(Any)
         .allow_headers(Any);
 
-    let app = Router::new()
-        .route("/api/notes/:user_id", get(get_notes))
-        .route("/api/notes", post(create_note))
-        .route("/api/notes/id/:id", get(get_note))
-        .route("/api/notes/id/:id", put(update_note))
-        .route("/api/notes/id/:id", delete(delete_note))
-        .layer(cors)
-        .with_state(state);
+   let app = Router::new()
+    .route("/", get(root_handler))  // <-- ADD THIS LINE
+    .route("/api/notes/:user_id", get(get_notes))
+    .route("/api/notes", post(create_note))
+    .route("/api/notes/id/:id", get(get_note))
+    .route("/api/notes/id/:id", put(update_note))
+    .route("/api/notes/id/:id", delete(delete_note))
+    .layer(cors)
+    .with_state(state);
 
     let address = format!("0.0.0.0:{}", port);
 
